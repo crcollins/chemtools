@@ -1,0 +1,60 @@
+usage: gjfwriter.py [-h] [-i [list_file [list_file ...]]] [-f folder] [-n N]
+                    [-x X] [-y Y] [-z Z] [-b BASIS] [-m MEM] [-T] [-E] [-V]
+                    [-L]
+                    [name [name ...]]
+
+This program writes Gaussian .gjf files from molecule names.
+
+positional arguments:
+  name                  The name of the molecule to create.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i [list_file [list_file ...]]
+                        A file with a listing of molecules to make.
+  -f folder             A folder to output the files.
+  -n N                  The length of the chain. (NOT IMPLEMENTED)
+  -x X                  The amount of molecules to stack on the x axis.
+  -y Y                  The amount of molecules to stack on the y axis.
+  -z Z                  The amount of molecules to stack on the z axis.
+  -b BASIS              The basis functional to use for the calculation.
+                        (b3lyp/6-31g(d) by default)
+  -m MEM                The amount of memory to use for the calculation. (59GB
+                        by default)
+  -T                    Toggles to use the TDDFT method.
+  -E                    Toggles showing error messages.
+  -V                    Toggles showing all messages.
+  -L                    Toggles showing the long name.
+
+
+
+
+
+Note: This is case sensitive.
+Note: Be sure to check the gjf files. Some errors might go unnoticed.
+
+Examples:
+
+gifwriter 24a_TON_24a_24a
+// This will write the file "24a_TON_24a_24a_DFT.gjf" with that respective molecule in the current folder.
+
+gifwriter 24a_TON_24a_24a -z 3
+// This will write the file "24a_TON_24a_24a_m3_DFT.gjf" with that respective molecule in the current folder.
+
+gifwriter 24a_TON_24a_24a 24b_TON_24a_24b -E
+// This will write the files "24a_TON_24a_24a_DFT.gjf" and "24b_TON_24a_24b_DFT.gjf" with that respective molecule in the current folder. This will also show the errors.
+
+gifwriter -i list.txt -z 2
+// This will read each line from the file "list.txt" and run it with the setting -z 2. Meaning, the molecule will be stacked 2 high.
+
+gifwriter -i list.txt -f molecules
+// This will read each line from the file "list.txt" and save the output in the folder "molecules" if the folder exists.
+
+gifwriter 24a_TON_24a_24a -m 100GB
+// This will write the file "24a_TON_24a_24a_DFT.gjf" and set it to use 100GB of memory.
+
+gifwriter 24a_TON_24a_24a -b someotherbasis
+// This will write the file "24a_TON_24a_24a_someotherbasis_DFT.gjf" and set it to use 100GB of memory.
+
+gifwriter 24a_TON_24a_24a -T
+// This will write the file "24a_TON_24a_24a_TDDFT.gjf" with that respective molecule in the current folder.

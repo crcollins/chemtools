@@ -1,0 +1,68 @@
+usage: jobwriter.py [-h] [-i [list_file [list_file ...]]] [-o outfolder]
+                    [-f [folder [folder ...]]] [-n NODES] [-e EMAIL] [-t TIME]
+                    [-E] [-V] [-B] [-T] [-G] [-A]
+                    [name [name ...]]
+
+This program writes Gaussian job files from molecule names.
+
+positional arguments:
+  name                  The name of the molecule to create.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i [list_file [list_file ...]]
+                        A file with a listing of molecules to make job files
+                        for.
+  -o outfolder          The folder to output all the job files.
+  -f [folder [folder ...]]
+                        A folders to read molecules from.
+  -n NODES              The amount of nodes to use for the calculation.(1 node
+                        by default)(This will be converted for Blacklight
+                        jobs.)
+  -e EMAIL              The email to send the callback to. (none@domain.com by
+                        default)
+  -t TIME               The amount of time, in hours, to use for the
+                        calculation . (16 hours by default)
+  -E                    Toggles showing error messages.
+  -V                    Toggles showing all messages.
+  -B                    Toggles writing Blacklight job files.
+  -T                    Toggles writing Trestles job files.
+  -G                    Toggles writing Gordon job files.
+  -A                    Toggles writing all job files.
+
+
+
+Writing the template job files:
+
+There are 5 varibles that can be used in the example job files:
+{email} - the email given by -e
+{nodes} - the number of node (given by -n)
+{ncpus} - the number of nodes * 16
+{name}  - the name of the job file and molecule
+{time}  - the amount of time in hours to run (given by -t)
+
+All the other parts of the example job files will remain the exact same. So, to remove the need to add your email everytime you run the script, just swap out the {email} in the example files for your email.
+
+
+Examples:
+
+jobwriter 24a_TON_24a_24a -T -e email@domain.com
+// This will write the Trestles job file "24a_TON_24a_24a_DFT.tjob" in the current folder. It will use the email "email@domain.com".
+
+jobwriter 24a_TON_24a_24a -A -o jobs
+// This will write all of the job files for 24a_TON_24a_24a_DFT (Blacklight, Trestles, Gordon) in the "jobs" folder.
+
+jobwriter 24a_TON_24a_24a 24b_TON_24a_24b -E -B
+// This will write the Bblacklight job files for 24a_TON_24a_24a_DFT and 24b_TON_24a_24b_DFT in the current directory. This will also show the errors.
+
+jobwriter -i list.txt -G
+// This will read each line from the file "list.txt" and it will write the Gordon job file for it in the current directory.
+
+jobwriter -i list.txt -f molecules -T
+// This will read each line from the file "list.txt" and read all the filenames from the folder "molecules" and write the Trestles jobs in the current directory.
+
+jobwriter 24a_TON_24a_24a -t 10 -n 2 -B
+// This will write the Blacklight job file for 24a_TON_24a_24a_DFT and set it to run for 10 hours using 2 nodes(32 cores for Blacklight).
+
+jobwriter 24a_TON_24a_24a -f molecules molecules2 -T
+// This will read each line from the file "list.txt" and read all the filenames from the folders "molecules" and "molecules2" and write the Trestles jobs in the current directory.

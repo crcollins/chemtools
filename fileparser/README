@@ -1,0 +1,46 @@
+usage: fileparser.py [-h] [-i [list_file [list_file ...]]]
+                     [-f [folder [folder ...]]] [-o output] [-e] [-p] [-R]
+                     [-v]
+                     [file [file ...]]
+
+This program extracts data from Gaussian log files.
+
+positional arguments:
+  file                  The name of single file.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i [list_file [list_file ...]]
+                        A file with a listing of other files.
+  -f [folder [folder ...]]
+                        A folder with a collection of files.
+  -o output             The output file.
+  -e                    Toggles showing error messages.
+  -p                    Toggles showing paths to files.
+  -R                    Toggles showing relative paths.
+  -v                    Toggles showing all messages.
+
+
+The output is comma delimited in the form of: 
+Name, Occ, Virtual, FirstExcited, Time
+
+
+Examples:
+
+fileparser TON_B25i_mPW3PBE_6_31d_n4_TDDFT.log
+// This runs the extraction on the file "TON_B25i_mPW3PBE_6_31d_n4_TDDFT.log" and outputs the data to the console.
+
+fileparser TON_B25i_mPW3PBE_6_31d_n4_TDDFT.log data/4a_CON_2J_4a_TDDFT.log
+// This is the same as before with the addition of another file "4a_CON_2J_4a_TDDFT.log" in the folder "data"
+
+fileparser -i datafiles -o output.txt
+// This takes a file "datafiles" and takes the induvidual lines in the file as seperate files to be processed. As well as outputting the information to the file "output.txt"
+
+fileparser -f data -o output.txt
+// This uses all the files in the folder "data" for the processing.
+
+fileparser -f data > output.txt
+// This yields the same results using stdout.
+
+fileparser -f data -o output.txt -e
+// Same as before plus the inclusion of error messages.
