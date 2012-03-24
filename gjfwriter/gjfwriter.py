@@ -103,6 +103,7 @@ class Molecule(object):
 					bond.parent = self.bonds
 					self.bonds.append(bond)
 		except AttributeError:
+			#means the molecule was made from read_data()
 			for atom in fragments[0]:
 				atom.parent = self.atoms
 				self.atoms.append(atom)
@@ -147,12 +148,14 @@ class Molecule(object):
 		return openbonds
 	
 	def next_open(self, conn="~*+"):
+		#scans for the first available bond in order of importance.
 		bonds = self.open_ends()
 		for x in conn:
 			for bond in bonds:
 				if x in [atom.element[0] for atom in bond.atoms]:
 					return bond
 		try:
+			#check the second bond type
 			for x in conn:
 				for bond in bonds:
 					if x in [atom.element[1] for atom in bond.atoms if len(atom.element)>1]:
@@ -255,6 +258,7 @@ def read_data(filename):
 
 def merge(bond1, bond2, frag):
 	#bond1 <= (bond2 from frag)
+	#find the part to change
 	if bond1.atoms[0].element[0] in "~*+":
 		R1, C1 = bond1.atoms
 	else:
@@ -264,8 +268,10 @@ def merge(bond1, bond2, frag):
 	else:
 		C2, R2 = bond2.atoms
 
+	#saved to prevent overwriting them
 	R2x, R2y = R2.x, R2.y
 	C1x, C1y = C1.x, C1.y
+	#angle of 1 - angle of 2 = angle to rotate
 	theta = math.atan2(R1.y-C1.y, R1.x-C1.x) - math.atan2(C2.y-R2.y, C2.x-R2.x)
 	frag.rotate(theta, (R2x, R2y), (C1x, C1y))
 	
@@ -273,6 +279,7 @@ def merge(bond1, bond2, frag):
 		bond1.atoms = (C2, C1)
 	else:
 		bond1.atoms = (C1, C2)
+	#remove the extension parts
 	[x.parent.remove(x) for x in (bond2, R1, R2)]
 
 def chain(frag, n):
@@ -281,8 +288,9 @@ def chain(frag, n):
 def stack(frag, x, y, z):
 	frags = [frag]
 	bb = frag.bounding_box()
-	size = tuple(f-i for i, f in zip(bb[0], bb[1]))
+	size = tuple(maxv-minv for minv, maxv in zip(bb[0], bb[1]))
 	for i,axis in enumerate((x,y,z)):
+		#means there is nothing to stack
 		if axis <= 1:
 			continue
 		axisfrags = copy.deepcopy(frags)
@@ -419,6 +427,7 @@ class Output(object):
 			this = []
 			for i,char in enumerate(side):
 				this.append(Molecule(read_data(char)))
+				#Used to fix R-groups because there are 2 of them
 				if char in OTHERS and i == (len(side)-1):
 					this.append(Molecule(read_data(char)))
 			fragments.append(this)
@@ -428,10 +437,10 @@ class Output(object):
 			for i,part in enumerate(side):
 				bondb = part.next_open()
 				c = bondb.connection()
-				#Used to fix X-groups
+				#Used to fix X-groups to fix ~* ambiguousness allowing correct placement
 				if j >= midx and c == "~":
 					c = "*" + c
-				#Used to fix R-groups
+				#Used to fix R-groups because there are 2 of them
 				if i == (len(side)-1) and c == "*+":
 					bonda = this[i-1].next_open(c)
 				else:
@@ -451,7 +460,3 @@ if __name__ == '__main__':
 		args = raw_input('Arguments: ')
 		out = Output(parser.parse_args(args.strip().split()))
 		paw = raw_input("<Press Enter>")
-	#for letter in "abcdefgh":
-	#	for x in xrange(1,5):
-	#		out = Output(parser.parse_args(["24%s_TON_2J_24%s" %(letter, letter), '-o', '../molecules/', '-m', str(x)]))
-	#		out.write_file()

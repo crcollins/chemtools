@@ -63,3 +63,13 @@ gifwriter 24a_TON_24a_24a -T
 
 gifwriter 24a_TON_24a_24a -d 20
 // This will write the file "24a_TON_24a_24a_TDDFT.gjf" with that respective molecule in the current folder. Also, it will create a basic image of the resulting molecule with a per pixel scaling of 20.
+
+
+Bugs
+j(phenyl) as R group does not work. Reason: The extension of the ~ and the R group placement is ambiguous. Can be fixed with rewrite of connection code.
+
+10(DTP) does not work. Reason: The double digits create problems for parsing. Can be fixed by adding case for "10"
+
+Long limit chains are not implemented. Reason: the ending ~ bonds are ambiguous.
+
+Images get chopped off. Reason: too lazy to add another conversion factor.
