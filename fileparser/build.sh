@@ -11,6 +11,7 @@ python $PYINSTALLER/pyinstaller.py --onefile $PROGRAM.py
 
 cp dist/$PROGRAM.exe ../bin/$PROGRAM/$PROGRAM.exe
 cp dist/$PROGRAM ../bin/$PROGRAM/$PROGRAM
+cp dist/$PROGRAM.py ../bin/$PROGRAM/$PROGRAM.py
 
 rm warn$PROGRAM.txt
 rm logdict*.log
