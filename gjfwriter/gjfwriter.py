@@ -5,6 +5,8 @@ import os
 import copy
 import argparse
 import sys
+import Image
+import ImageDraw
 
 parser = argparse.ArgumentParser(description="This program writes Gaussian .gjf files from molecule names.")
 parser.add_argument('names', metavar='name', type=str, nargs='*', default=list(), help='The name of the molecule to create.')
@@ -18,6 +20,8 @@ parser.add_argument('-z', type=int, action="store", default=1, help="The amount 
 
 parser.add_argument('-b', action="store", dest="basis", default="b3lyp/6-31g(d)", help="The basis functional to use for the calculation. (b3lyp/6-31g(d) by default)")
 parser.add_argument('-m', action="store", dest="mem", default ="59GB",  help="The amount of memory to use for the calculation. (59GB by default)")
+
+parser.add_argument('-d', type=int, action="store", default=0, help="Used to scale an output image. (0 by default, meaning no picture)")
 
 parser.add_argument('-T', action="store_true", dest="t", default=False, help="Toggles to use the TDDFT method.")
 parser.add_argument('-E', action="store_true", dest="error", default=False, help='Toggles showing error messages.')
@@ -161,6 +165,38 @@ class Molecule(object):
 			if atom.element[0] in "~*+":
 				atom.element = "H"
 
+	def draw(self, name, scale):
+		colors = {
+			'1': (255,255,255),
+			'Ar': (255, 0, 0),
+			'2': (0, 255, 0),
+			'3': (0, 0, 255),
+			'S': (255, 255, 0),
+			'O': (255, 0, 0),
+			'N': (0, 0, 255),
+			'Cl': (0, 255, 0),
+			'Br': (180, 0, 0),
+			'C': (128, 128, 128),
+			'H': (220, 220, 220)
+			}
+
+		bounds = self.bounding_box()
+		xres = int(scale * abs(bounds[0][0] - bounds[1][0]))
+		yres = int(scale * abs(bounds[0][1] - bounds[1][1]))
+		img = Image.new("RGB", (xres, yres))
+		draw = ImageDraw.Draw(img)
+		for bond in self.bonds:
+			pts = sum([x.xyz[:2] for x in bond.atoms], tuple())
+			pts = [(coord-bounds[0][i%2])*scale for i,coord in enumerate(pts)]
+
+			draw.line(pts,fill=colors[bond.type])
+			s = (scale * .25)
+			for x in xrange(2):
+				if bond.atoms[x].element not in "C":
+					circle = (pts[x*2] - s,pts[x*2+1] - s, pts[x*2] + s, pts[x*2+1] + s)
+					draw.ellipse(circle, fill=colors[bond.atoms[x].element])
+		img.save(name+".png")
+
 	def __getitem__(self, key):
 		for x in self.bonds:
 			if key in [y.element for y in x.atoms]:
@@ -269,6 +305,7 @@ class Output(object):
 		self.mem = args.mem
 		self.longname = args.longname | args.verbose
 		self.error = args.error | args.verbose
+		self.scale = args.d
 		self.args = args
 
 		self.n = '' if args.n <= 1 else "n%i" %(args.n)
@@ -297,6 +334,8 @@ class Output(object):
 					self.errors.append(("", "Bad Folder Name"))
 					break
 				self.write_file(molecule, f, filename)
+				if self.scale:
+					molecule.draw(filename, self.scale)
 			except Exception as (num, message, ):
 				self.errors.append((name, message))
 			print name, "---- Done"

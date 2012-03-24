@@ -1,6 +1,6 @@
 usage: gjfwriter.py [-h] [-i [list_file [list_file ...]]] [-f folder] [-n N]
-                    [-x X] [-y Y] [-z Z] [-b BASIS] [-m MEM] [-T] [-E] [-V]
-                    [-L]
+                    [-x X] [-y Y] [-z Z] [-b BASIS] [-m MEM] [-d D] [-T] [-E]
+                    [-V] [-L]
                     [name [name ...]]
 
 This program writes Gaussian .gjf files from molecule names.
@@ -21,6 +21,8 @@ optional arguments:
                         (b3lyp/6-31g(d) by default)
   -m MEM                The amount of memory to use for the calculation. (59GB
                         by default)
+  -d D                  Used to scale an output image. (0 by default, meaning
+                        no picture)
   -T                    Toggles to use the TDDFT method.
   -E                    Toggles showing error messages.
   -V                    Toggles showing all messages.
@@ -58,3 +60,6 @@ gifwriter 24a_TON_24a_24a -b someotherbasis
 
 gifwriter 24a_TON_24a_24a -T
 // This will write the file "24a_TON_24a_24a_TDDFT.gjf" with that respective molecule in the current folder.
+
+gifwriter 24a_TON_24a_24a -d 20
+// This will write the file "24a_TON_24a_24a_TDDFT.gjf" with that respective molecule in the current folder. Also, it will create a basic image of the resulting molecule with a per pixel scaling of 20.
