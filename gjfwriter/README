@@ -31,9 +31,12 @@ optional arguments:
 
 
 
+Notes:
 
-Note: This is case sensitive.
-Note: Be sure to check the gjf files. Some errors might go unnoticed.
+This program is case sensitive. 
+Be sure to check the gjf files. Some errors might go unnoticed.
+To use the image drawer you must have PIL installed. http://www.pythonware.com/products/pil/
+
 
 Examples:
 
@@ -75,5 +78,3 @@ Long limit chains are not implemented. Reason: the ending ~ bonds are ambiguous.
 Images get chopped off. Reason: too lazy to add another conversion factor.
 
 Non planar parts are skewed. Reason: the rotation is only 2D.
-
-Image import error. Reason: PyInstaller does not ply well with PIL

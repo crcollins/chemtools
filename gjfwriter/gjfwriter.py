@@ -5,8 +5,6 @@ import os
 import copy
 import argparse
 import sys
-import Image
-import ImageDraw
 
 parser = argparse.ArgumentParser(description="This program writes Gaussian .gjf files from molecule names.")
 parser.add_argument('names', metavar='name', type=str, nargs='*', default=list(), help='The name of the molecule to create.')
@@ -21,7 +19,12 @@ parser.add_argument('-z', type=int, action="store", default=1, help="The amount 
 parser.add_argument('-b', action="store", dest="basis", default="b3lyp/6-31g(d)", help="The basis functional to use for the calculation. (b3lyp/6-31g(d) by default)")
 parser.add_argument('-m', action="store", dest="mem", default ="59GB",  help="The amount of memory to use for the calculation. (59GB by default)")
 
-parser.add_argument('-d', type=int, action="store", default=0, help="Used to scale an output image. (0 by default, meaning no picture)")
+try:
+	import Image
+	import ImageDraw
+	parser.add_argument('-d', type=int, action="store", default=0, help="Used to scale an output image. (0 by default, meaning no picture)")
+except:
+	pass
 
 parser.add_argument('-T', action="store_true", dest="t", default=False, help="Toggles to use the TDDFT method.")
 parser.add_argument('-E', action="store_true", dest="error", default=False, help='Toggles showing error messages.')
@@ -169,6 +172,8 @@ class Molecule(object):
 				atom.element = "H"
 
 	def draw(self, name, scale):
+		if not Image:
+			return
 		colors = {
 			'1': (255,255,255),
 			'Ar': (255, 0, 0),
@@ -314,7 +319,10 @@ class Output(object):
 		self.mem = args.mem
 		self.longname = args.longname | args.verbose
 		self.error = args.error | args.verbose
-		self.scale = args.d
+		try:
+			self.scale = args.d
+		except:
+			self.scale = 0
 		self.args = args
 
 		self.n = '' if args.n <= 1 else "n%i" %(args.n)
