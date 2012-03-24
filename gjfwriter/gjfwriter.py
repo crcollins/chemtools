@@ -204,7 +204,8 @@ class Molecule(object):
 				if bond.atoms[x].element not in "C":
 					circle = (pts[x*2] - s,pts[x*2+1] - s, pts[x*2] + s, pts[x*2+1] + s)
 					draw.ellipse(circle, fill=colors[bond.atoms[x].element])
-		img.save(name+".png")
+		#rotate to standard view
+		img.rotate(-90).save(name+".png")
 
 	def __getitem__(self, key):
 		for x in self.bonds:
