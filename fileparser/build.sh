@@ -9,8 +9,8 @@ PROGRAM=${PWD##*/}
 $WINPYTHON $PYINSTALLER/pyinstaller.py --onefile $PROGRAM.py
 python $PYINSTALLER/pyinstaller.py --onefile $PROGRAM.py
 
-cp dist/$PROGRAM.exe ../bin/$PROGRAM.exe
-cp dist/$PROGRAM ../bin/$PROGRAM
+cp dist/$PROGRAM.exe ../bin/$PROGRAM/$PROGRAM.exe
+cp dist/$PROGRAM ../bin/$PROGRAM/$PROGRAM
 
 rm warn$PROGRAM.txt
 rm logdict*.log
