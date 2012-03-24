@@ -321,23 +321,26 @@ class Output(object):
 			self.names = set(args.names)
 
 		for name in self.names:
-			try:
-				molecule = self.build(*self.parse(name))
-				if self.longname:
-					nameparts = [x for x in [name, self.basis_, self.x, self.y, self.z, self.n, self.dft] if x]
-				else:
-					nameparts = [x for x in [name, self.x, self.y, self.z, self.n, self.dft] if x]
-				filename = "_".join(nameparts)
-				try:
-					f = open(os.path.join(args.folder, filename+".gjf"), "w")
-				except IOError:
-					self.errors.append(("", "Bad Folder Name"))
-					break
-				self.write_file(molecule, f, filename)
-				if self.scale:
-					molecule.draw(filename, self.scale)
-			except Exception as (num, message, ):
-				self.errors.append((name, message))
+            try:
+                try:
+                    molecule = self.build(*self.parse(name))
+                    if self.longname:
+                        nameparts = [x for x in [name, self.basis_, self.x, self.y, self.z, self.n, self.dft] if x]
+                    else:
+                        nameparts = [x for x in [name, self.x, self.y, self.z, self.n, self.dft] if x]
+                    filename = "_".join(nameparts)
+                    try:
+                        f = open(os.path.join(args.folder, filename+".gjf"), "w")
+                    except IOError:
+                        self.errors.append(("", "Bad Folder Name"))
+                        break
+                    self.write_file(molecule, f, filename)
+                    if self.scale:
+                        molecule.draw(filename, self.scale)
+                except Exception as (num, message, ):
+                    self.errors.append((name, message))
+            except:
+                self.errors.append(('None', message))
 			print name, "---- Done"
 		
 		if self.error:
