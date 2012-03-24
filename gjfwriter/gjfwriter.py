@@ -134,9 +134,9 @@ class Molecule(object):
 			miny = min(atom.y, miny)
 			minz = min(atom.z, minz)
 
-			maxx = max(atom.x, minx)
-			maxy = max(atom.y, miny)
-			maxz = max(atom.z, minz)
+			maxx = max(atom.x, maxx)
+			maxy = max(atom.y, maxy)
+			maxz = max(atom.z, maxz)
 		return (minx, miny, minz), (maxx, maxy, maxz)
 
 	def open_ends(self):
