@@ -446,41 +446,44 @@ class Output(object):
 		return core, left, middle, right
 
 	def build(self, corename, leftname, middlename, rightname):
-		core = Molecule(read_data(corename))
-		structure = [x for x in [rightname, leftname] + [middlename] * 2 if x != None]
-		if middlename:
-			midx = structure.index(middlename)
-		else:
-			midx = len(structure)
+		core = (Molecule(read_data(corename)), 0, corename, corename)
+		struct = [x if x else "A" for x in [rightname, leftname] + [middlename] * 2]
+		midx = 2
 
 		fragments = []
-		for side in structure:
+		for side in struct:
 			this = []
-			for i,char in enumerate(side):
-				this.append(Molecule(read_data(char)))
-				#Used to fix R-groups because there are 2 of them
-				if char in OTHERS and i == (len(side)-1):
-					this.append(Molecule(read_data(char)))
+			for i, char in enumerate(side):
+				if char in "10":
+					raise Exception(4, "10 not implemented")
+				this.append((Molecule(read_data(char)), i, char, side))
+				if char.islower() and i == len(side)-1 :
+					#checks to make sure the prev group was aryl for r-groups
+					if this[i-1][2] not in '2389' and this[i-1][2].isdigit():
+						this.append((Molecule(read_data(char)), i, char, side))
 			fragments.append(this)
-
+		
 		for j, side in enumerate(fragments):
 			this = [core]+side
-			for i,part in enumerate(side):
+			for (part, partidx, char, sidename) in side:
 				bondb = part.next_open()
 				c = bondb.connection()
-				#Used to fix X-groups to fix ~* ambiguousness allowing correct placement
+				#enforces lowercase to be r-group
+				if char.islower():
+					c = "+"
 				if j >= midx and c == "~":
 					c = "*" + c
-				#Used to fix R-groups because there are 2 of them
-				if i == (len(side)-1) and c == "*+":
-					bonda = this[i-1].next_open(c)
-				else:
-					bonda = this[i].next_open(c)
-
+				#fixes x-groups connecting to ~
+				if j >= midx and c == "*" and char.isupper():
+					c = "~" + c
+				bonda = this[partidx][0].next_open(c)
 				if bonda and bondb:
-					merge(bonda, bondb, part)
-
-		a = Molecule([core]+[item for sublist in fragments for item in sublist])
+					this[partidx][0].merge(bonda, bondb, part)
+		out = [core[0]]
+		for x in fragments:
+			for y in x:
+				out.append(y[0])
+		a = Molecule(out)
 		a.close_ends()
 		return a
 
