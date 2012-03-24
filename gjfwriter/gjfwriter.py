@@ -237,6 +237,53 @@ class Molecule(object):
 			string += s + "\n"
 		return string
 
+	def merge(self, bond1, bond2, frag):
+		#bond1 <= (bond2 from frag)
+		#find the part to change
+		if bond1.atoms[0].element[0] in "~*+":
+			R1, C1 = bond1.atoms
+		else:
+			C1, R1 = bond1.atoms
+		if bond2.atoms[0].element[0] in "~*+":
+			R2, C2 = bond2.atoms
+		else:
+			C2, R2 = bond2.atoms
+
+		#saved to prevent overwriting them
+		R2x, R2y = R2.x, R2.y
+		C1x, C1y = C1.x, C1.y
+		#angle of 1 - angle of 2 = angle to rotate
+		theta = math.atan2(R1.y-C1.y, R1.x-C1.x) - math.atan2(C2.y-R2.y, C2.x-R2.x)
+		frag.rotate(theta, (R2x, R2y), (C1x, C1y))
+		
+		if bond1.atoms[0].element[0] in "~*+":
+			bond1.atoms = (C2, C1)
+		else:
+			bond1.atoms = (C1, C2)
+		#remove the extension parts
+		[x.parent.remove(x) for x in (bond2, R1, R2)]
+
+	def chain(self, n):
+		raise Exception(0, "Chains are not Implemented")
+
+	def stack(self, x, y, z):
+		frags = [self]
+		bb = self.bounding_box()
+		size = tuple(maxv-minv for minv, maxv in zip(bb[0], bb[1]))
+		for i,axis in enumerate((x,y,z)):
+			#means there is nothing to stack
+			if axis <= 1:
+				continue
+			axisfrags = copy.deepcopy(frags)
+			for num in xrange(1,axis):
+				use = [0,0,0]
+				use[i] = num*(2+size[i]) 
+				for f in axisfrags:
+					a = copy.deepcopy(f)
+					a.displace(*use)
+					frags.append(a)
+		return Molecule(frags)
+
 ##############################################################################
 
 def read_data(filename):
@@ -261,32 +308,6 @@ def read_data(filename):
 			bonds.append(Bond((atoms[int(a1)-1], atoms[int(a2)-1]), t, bonds))
 	f.close()
 	return atoms, bonds
-
-def merge(bond1, bond2, frag):
-	#bond1 <= (bond2 from frag)
-	#find the part to change
-	if bond1.atoms[0].element[0] in "~*+":
-		R1, C1 = bond1.atoms
-	else:
-		C1, R1 = bond1.atoms
-	if bond2.atoms[0].element[0] in "~*+":
-		R2, C2 = bond2.atoms
-	else:
-		C2, R2 = bond2.atoms
-
-	#saved to prevent overwriting them
-	R2x, R2y = R2.x, R2.y
-	C1x, C1y = C1.x, C1.y
-	#angle of 1 - angle of 2 = angle to rotate
-	theta = math.atan2(R1.y-C1.y, R1.x-C1.x) - math.atan2(C2.y-R2.y, C2.x-R2.x)
-	frag.rotate(theta, (R2x, R2y), (C1x, C1y))
-	
-	if bond1.atoms[0].element[0] in "~*+":
-		bond1.atoms = (C2, C1)
-	else:
-		bond1.atoms = (C1, C2)
-	#remove the extension parts
-	[x.parent.remove(x) for x in (bond2, R1, R2)]
 
 def chain(frag, n):
 	raise Exception(0, "Chains are not Implemented")
