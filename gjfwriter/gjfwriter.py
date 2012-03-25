@@ -352,21 +352,11 @@ class Output(object):
 		self.x = '' if args.x <= 1 else "x%i" %(args.x)
 		self.y = '' if args.y <= 1 else "y%i" %(args.y)
 		self.z = '' if args.z <= 1 else "z%i" %(args.z)
-		
-		if args.listfiles:
-			this = [y for y in [self.read_listfile(x) for x in args.listfiles] if y]
-			self.names = set(args.names + sum([x for x in this if x],[]))
-		else:
-			self.names = set(args.names)
 
-		for name in self.names:
+		for name in self.get_names():
 			try:
 				molecule = self.build(*self.parse(name))
-				if self.longname:
-					nameparts = [x for x in [name, self.basis_, self.x, self.y, self.z, self.n, self.dft] if x]
-				else:
-					nameparts = [x for x in [name, self.x, self.y, self.z, self.n, self.dft] if x]
-				filename = "_".join(nameparts)
+				filename = self.get_filename(name)
 				try:
 					f = open(os.path.join(args.folder, filename+".gjf"), "w")
 				except IOError:
@@ -386,6 +376,23 @@ class Output(object):
 					print " - ".join([str(x[0]), x[1]])
 				else:
 					print repr(x)
+
+	def get_filename(self, name):
+		if self.longname:
+				nameparts = [x for x in [name, self.basis_, self.x, self.y, self.z, self.n, self.dft] if x]
+		else:
+			nameparts = [x for x in [name, self.x, self.y, self.z, self.n, self.dft] if x]
+		return "_".join(nameparts)
+
+	def get_names(self):
+		if self.args.listfiles:
+			that = [self.read_listfile(x) for x in self.args.listfiles] 
+			this = [y for y in that if y]
+			other = sum([x for x in this if x],[])
+			names = set(self.args.names + other)
+		else:
+			names = set(self.args.names)
+		return names
 
 	def write_file(self, molecule, f, name):
 		if self.args.n > 1:
@@ -463,7 +470,7 @@ class Output(object):
 					if this[i-1][2] not in '2389' and this[i-1][2].isdigit():
 						this.append((Molecule(read_data(char)), i, char, side))
 			fragments.append(this)
-		
+
 		for j, side in enumerate(fragments):
 			this = [core]+side
 			for (part, partidx, char, sidename) in side:
