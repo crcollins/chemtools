@@ -243,12 +243,16 @@ class Molecule(object):
 		#find the part to change
 		if bond1.atoms[0].element[0] in "~*+":
 			R1, C1 = bond1.atoms
-		else:
+		elif bond1.atoms[1].element[0] in "~*+":
 			C1, R1 = bond1.atoms
+		else:
+			raise Exception(5, "bad bond")
 		if bond2.atoms[0].element[0] in "~*+":
 			R2, C2 = bond2.atoms
-		else:
+		elif bond2.atoms[1].element[0] in "~*+":
 			C2, R2 = bond2.atoms
+		else:
+			raise Exception(6, "bad bond")
 
 		#saved to prevent overwriting them
 		R2x, R2y = R2.x, R2.y
