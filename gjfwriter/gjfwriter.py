@@ -268,8 +268,18 @@ class Molecule(object):
 		#remove the extension parts
 		[x.parent.remove(x) for x in (bond2, R1, R2)]
 
-	def chain(self, n):
-		raise Exception(0, "Chains are not Implemented")
+	def chain(self, left, right, n):
+		#raise Exception(0, "Chains are not Implemented")
+		frags = [copy.deepcopy(self)]
+		lidx, ridx = self.bonds.index(left), self.bonds.index(right)
+		for i in xrange(n-1):
+			a = copy.deepcopy(self)
+			if i == 0:
+				frags[i].merge(frags[i].bonds[ridx], a.bonds[lidx], a)
+			else:
+				frags[i].merge(frags[i].bonds[ridx-1], a.bonds[lidx], a)
+			frags.append(a)
+		return Molecule(frags)
 
 	def stack(self, x, y, z):
 		frags = [self]
@@ -314,27 +324,6 @@ def read_data(filename):
 	f.close()
 	return atoms, bonds
 
-def chain(frag, n):
-	raise Exception(0, "Chains are not Implemented")
-
-def stack(frag, x, y, z):
-	frags = [frag]
-	bb = frag.bounding_box()
-	size = tuple(maxv-minv for minv, maxv in zip(bb[0], bb[1]))
-	for i,axis in enumerate((x,y,z)):
-		#means there is nothing to stack
-		if axis <= 1:
-			continue
-		axisfrags = copy.deepcopy(frags)
-		for num in xrange(1,axis):
-			use = [0,0,0]
-			use[i] = num*(2+size[i]) 
-			for f in axisfrags:
-				a = copy.deepcopy(f)
-				a.displace(*use)
-				frags.append(a)
-	return Molecule(frags)
-
 ##############################################################################
 
 class Output(object):
@@ -373,6 +362,7 @@ class Output(object):
 					self.errors.append(message)
 			print name, "---- Done"
 		
+
 		if self.error:
 			print "\n---- Errors ----"
 			for x in self.errors:
@@ -399,12 +389,6 @@ class Output(object):
 		return names
 
 	def write_file(self, molecule, f, name):
-		if self.args.n > 1:
-			base = copy.deepcopy(molecule)
-			molecule = chain(molecule, self.args.n)
-
-		if any((self.args.x, self.args.y, self.args.z)):
-			molecule = stack(molecule, self.args.x, self.args.y, self.args.z)
 		starter = [
 					"%%mem=%s"%self.mem,
 					"%%chk=%s.chk" %name,
@@ -474,7 +458,8 @@ class Output(object):
 					if this[i-1][2] not in '2389' and this[i-1][2].isdigit():
 						this.append((Molecule(read_data(char)), i, char, side))
 			fragments.append(this)
-
+		ends = []
+		#bond all of the fragments together
 		for j, side in enumerate(fragments):
 			this = [core]+side
 			for (part, partidx, char, sidename) in side:
@@ -491,11 +476,21 @@ class Output(object):
 				bonda = this[partidx][0].next_open(c)
 				if bonda and bondb:
 					this[partidx][0].merge(bonda, bondb, part)
+			ends.append(this[max([x[1] for x in side])][0].next_open('~'))
+
+		#merge the fragments into single molecule
 		out = [core[0]]
 		for x in fragments:
 			for y in x:
 				out.append(y[0])
 		a = Molecule(out)
+
+		#multiplication of molecule/chain
+		limit = all(ends[:2]) and all('~' in x.connection() for x in ends[:2])
+		if self.args.n > 1 and limit:
+			a = a.chain(ends[0], ends[1], self.args.n)
+		if any((self.args.x, self.args.y, self.args.z)):
+			a = a.stack(self.args.x, self.args.y, self.args.z)
 		a.close_ends()
 		return a
 
