@@ -43,7 +43,8 @@ class Output(object):
         self.folders = args.folders
         for folder in self.folders:
             try:
-                self.names += [os.path.splitext(x)[0] for x in os.listdir(folder) if os.path.isfile(x)]
+                xfiles = os.listdir(folder)
+                self.names += [os.path.splitext(x)[0] for x in xfiles if os.path.isfile(os.path.join(folder, x))]
             except:
                 self.errors.append((folder, "Bad Folder Name"))
         self.listfiles = args.listfiles
