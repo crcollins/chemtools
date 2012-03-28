@@ -5,7 +5,7 @@ import argparse
 import sys
 
 messages = []
-for name in ("bjob.txt", "tjob.txt", "gjob.txt"):
+for name in ("bjob.txt", "tjob.txt", "gjob.txt", "cjob.txt"):
     messages.append(''.join(open("data/"+name, "r").readlines())) 
 
 parser = argparse.ArgumentParser(description="This program writes Gaussian job files from molecule names.")
@@ -24,6 +24,7 @@ parser.add_argument('-V', action="store_true", dest="verbose", default=False, he
 parser.add_argument('-B', action="store_true", dest="blacklight", default=False, help='Toggles writing Blacklight job files.')
 parser.add_argument('-T', action="store_true", dest="trestles", default=False, help='Toggles writing Trestles job files.')
 parser.add_argument('-G', action="store_true", dest="gordon", default=False, help='Toggles writing Gordon job files.')
+parser.add_argument('-C', action="store_true", dest="carver", default=False, help='Toggles writing Carver job files.')
 parser.add_argument('-A', action="store_true", dest="all", default=False, help='Toggles writing all job files.')
 
 
@@ -37,6 +38,7 @@ class Output(object):
         self.bjob = args.blacklight | args.all
         self.tjob = args.trestles | args.all
         self.gjob = args.gordon | args.all
+        self.cjob = args.carver | args.all
         self.outfolder = args.outfolder
         self.nodes = args.nodes
 
@@ -56,7 +58,6 @@ class Output(object):
                 self.errors.append((filename, "Bad File Name"))
         self.args = args
 
-        j = ["b","t","g"]
         if not os.path.isdir(self.outfolder):
             self.errors.append((self.outfolder, "Bad Output Folder Name"))
         else:
@@ -72,10 +73,10 @@ class Output(object):
             print "\n".join([" - ".join(x) for x in self.errors])
 
     def write_file(self, name):
-        j = ["b","t","g"]
+        j = ["b","t","g","c"]
         factor = self.get_time_factor(name)
         time = "%d:00:00" %(self.time*factor)
-        for i, x in enumerate([self.bjob, self.tjob, self.gjob]):
+        for i, x in enumerate([self.bjob, self.tjob, self.gjob, self.cjob]):
             if not x:
                 continue
             f = open(os.path.join(self.outfolder, name+".%sjob"%j[i]), "w")
