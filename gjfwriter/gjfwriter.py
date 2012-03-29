@@ -42,6 +42,10 @@ class Atom(object):
 		self.parent = parent
 		self.element = element
 		self.x, self.y, self.z = float(x),float(y),float(z)
+		self.bonds = []
+
+	def remove(self):
+		self.parent.remove(self)
 
 	@property
 	def xyz(self):
@@ -59,6 +63,15 @@ class Atom(object):
 	def gjf(self):
 		return self.element + " %f %f %f" %(self.xyz)
 
+	@property
+	def gjfbonds(self):
+		s = str(self.id) + ' '
+		for bond in self.bonds:
+			if bond.atoms[0] == self:
+				x = bond.atoms[1]
+				s += ' ' + str(x.id) + ' ' + (bond.type if bond.type != "Ar" else "1.5")
+		return s
+
 	def __str__(self):
 		return self.element + " %f %f %f" %(self.xyz)
 
@@ -67,8 +80,11 @@ class Bond(object):
 	def __init__(self, atoms, type_, parent=None):
 		self.parent = parent
 
-		self.atoms = atoms
+		self._atoms = atoms
 		self.type = type_
+
+		for atom in self.atoms:
+			atom.bonds.append(self)
 
 	def connection(self):
 		'''Returns the connection type of the bond for merging.'''
@@ -77,6 +93,23 @@ class Bond(object):
 		else:
 			b = self.atoms[1].element[:2]
 		return ''.join([x for x in b if x in "~*+"])
+
+	def remove(self):
+		self.parent.remove(self)
+		for atom in self.atoms:
+			atom.bonds.remove(self)
+
+	@property
+	def atoms(self):
+		return self._atoms
+
+	@atoms.setter
+	def atoms(self, value):
+		for atom in self._atoms:
+			atom.bonds.remove(self)
+		for atom in value:
+			atom.bonds.append(self)
+		self._atoms = value
 
 	@property
 	def length(self):
@@ -237,17 +270,7 @@ class Molecule(object):
 	def gjf(self):
 		'''Returns a string with the in the proper .gjf format.'''
 		string = "\n".join([x.gjf for x in self.atoms]) + "\n\n"
-		bonds = self.bonds[:]
-		for atom in self.atoms:
-			s = str(atom.id) + " "
-			for bond in tuple(bonds):
-				if atom.id in [x.id for x in bond.atoms]:
-					try:
-						s += [str(x.id) + " " + (bond.type if bond.type != "Ar" else "1.5") + " " for x in bond.atoms if x.id != atom.id][0]
-						bonds.remove(bond)
-					except:
-						pass
-			string += s + "\n"
+		string += "\n".join([x.gjfbonds for x in self.atoms])
 		return string
 
 	def merge(self, bond1, bond2, frag):
@@ -279,7 +302,7 @@ class Molecule(object):
 		else:
 			bond1.atoms = (C1, C2)
 		#remove the extension parts
-		[x.parent.remove(x) for x in (bond2, R1, R2)]
+		[x.remove() for x in (bond2, R1, R2)]
 
 	def chain(self, left, right, n):
 		'''Returns an n length chain of the molecule.'''
