@@ -398,7 +398,7 @@ class Output(object):
 					break
 				self.write_file(molecule, f, filename)
 				if self.scale:
-					molecule.draw(filename, self.scale)
+					molecule.draw(os.path.join(args.folder, filename), self.scale)
 			except Exception as message:
 					self.errors.append(message)
 			print name, "---- Done"
