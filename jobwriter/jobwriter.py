@@ -74,8 +74,7 @@ class Output(object):
 
     def write_file(self, name):
         j = ["b","t","g","c"]
-        factor = self.get_time_factor(name)
-        time = "%d:00:00" %(self.time*factor)
+        time = "%d:00:00" %(self.time)
         for i, x in enumerate([self.bjob, self.tjob, self.gjob, self.cjob]):
             if not x:
                 continue
@@ -88,11 +87,6 @@ class Output(object):
                     "time":time
                     }
             f.write(messages[i].format(**use))
-    
-    def get_time_factor(self, name):
-        s = name.split("_")
-        s1 = [int(x[1:]) for x in s if (x[0] in "xyzn") and x[1].isdigit()]
-        return reduce(operator.mul, s1) if s1 else 1
 
 
 if __name__ == '__main__':
