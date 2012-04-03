@@ -42,6 +42,10 @@ class Atom(object):
 		self.parent = parent
 		self.element = element
 		self.x, self.y, self.z = float(x),float(y),float(z)
+		self.bonds = []
+
+	def remove(self):
+		self.parent.remove(self)
 
 	@property
 	def xyz(self):
@@ -59,6 +63,15 @@ class Atom(object):
 	def gjf(self):
 		return self.element + " %f %f %f" %(self.xyz)
 
+	@property
+	def gjfbonds(self):
+		s = str(self.id) + ' '
+		for bond in self.bonds:
+			if bond.atoms[0] == self:
+				x = bond.atoms[1]
+				s += ' ' + str(x.id) + ' ' + (bond.type if bond.type != "Ar" else "1.5")
+		return s
+
 	def __str__(self):
 		return self.element + " %f %f %f" %(self.xyz)
 
@@ -67,22 +80,45 @@ class Bond(object):
 	def __init__(self, atoms, type_, parent=None):
 		self.parent = parent
 
-		self.atoms = atoms
+		self._atoms = atoms
 		self.type = type_
 
+		for atom in self.atoms:
+			atom.bonds.append(self)
+
 	def connection(self):
+		'''Returns the connection type of the bond for merging.'''
 		if self.atoms[0].element[0] in "~*+":
 			b = self.atoms[0].element[:2]
 		else:
 			b = self.atoms[1].element[:2]
 		return ''.join([x for x in b if x in "~*+"])
 
+	def remove(self):
+		self.parent.remove(self)
+		for atom in self.atoms:
+			atom.bonds.remove(self)
+
+	@property
+	def atoms(self):
+		return self._atoms
+
+	@atoms.setter
+	def atoms(self, value):
+		for atom in self._atoms:
+			atom.bonds.remove(self)
+		for atom in value:
+			atom.bonds.append(self)
+		self._atoms = value
+
 	@property
 	def length(self):
+		'''Returns the length of the bond.'''
 		return sum((x-y)**2 for (x,y) in zip(*tuple(a.xyz for a in self.atoms))) ** .5
 
 	@property
 	def id(self):
+		'''Returns the id of the current bond. '''
 		return self.parent.index(self)+1
 
 	@property
@@ -115,6 +151,7 @@ class Molecule(object):
 				self.bonds.append(bond)
 
 	def rotate(self, theta, point, offset):
+		'''Rotates all the atoms in the molecule around point (x,y) with an offset (x,y).'''
 		#point = (x,y); offset = (x,y)
 		ct = math.cos(theta)
 		st = math.sin(theta)
@@ -125,12 +162,14 @@ class Molecule(object):
 			atom.y = st*x + ct*y + offset[1]
 
 	def displace(self, x, y, z):
+		'''Runs a uniform displacement on all the atoms in a molecule.'''
 		for atom in self.atoms:
 			atom.x += x
 			atom.y += y
 			atom.z += z
 
 	def bounding_box(self):
+		'''Returns the bounding box of the molecule.'''
 		minx, miny, minz = self.atoms[0].xyz
 		maxx, maxy, maxz = self.atoms[0].xyz
 		for atom in self.atoms[1:]:
@@ -144,6 +183,7 @@ class Molecule(object):
 		return (minx, miny, minz), (maxx, maxy, maxz)
 
 	def open_ends(self):
+		'''Returns a list of any bonds that contain non-standard elements.'''
 		openbonds = []
 		for x in self.bonds:
 			if any(True for atom in x.atoms if atom.element[0] in "+*~"):
@@ -151,6 +191,7 @@ class Molecule(object):
 		return openbonds
 	
 	def next_open(self, conn="~*+"):
+		'''Returns the next open bond of the given connection type.'''
 		#scans for the first available bond in order of importance.
 		bonds = self.open_ends()
 		for x in conn:
@@ -167,11 +208,13 @@ class Molecule(object):
 			pass
 		
 	def close_ends(self):
+		'''Converts any non-standard atoms into Hydrogens.'''
 		for atom in self.atoms:
 			if atom.element[0] in "~*+":
 				atom.element = "H"
 
 	def draw(self, name, scale):
+		'''Draws a basic image of the molecule.'''
 		if not Image:
 			return
 		colors = {
@@ -216,6 +259,7 @@ class Molecule(object):
 
 	@property
 	def mol2(self):
+		'''Returns a string with the in the proper .mol2 format.'''
 		string = """@<TRIPOS>MOLECULE\nMolecule Name\n%d %d\nSMALL\nNO_CHARGES\n\n@<TRIPOS>ATOM""" %(len(self.atoms), len(self.bonds))
 		string += "\n".join([x.mol2 for x in self.atoms] + 
 						["@<TRIPOS>BOND", ] + 
@@ -224,21 +268,13 @@ class Molecule(object):
 	
 	@property
 	def gjf(self):
+		'''Returns a string with the in the proper .gjf format.'''
 		string = "\n".join([x.gjf for x in self.atoms]) + "\n\n"
-		bonds = self.bonds[:]
-		for atom in self.atoms:
-			s = str(atom.id) + " "
-			for bond in tuple(bonds):
-				if atom.id in [x.id for x in bond.atoms]:
-					try:
-						s += [str(x.id) + " " + (bond.type if bond.type != "Ar" else "1.5") + " " for x in bond.atoms if x.id != atom.id][0]
-						bonds.remove(bond)
-					except:
-						pass
-			string += s + "\n"
+		string += "\n".join([x.gjfbonds for x in self.atoms])
 		return string
 
 	def merge(self, bond1, bond2, frag):
+		'''Merges two bonds. Bond1 is the bond being bonded to.'''
 		#bond1 <= (bond2 from frag)
 		#find the part to change
 		if bond1.atoms[0].element[0] in "~*+":
@@ -266,22 +302,25 @@ class Molecule(object):
 		else:
 			bond1.atoms = (C1, C2)
 		#remove the extension parts
-		[x.parent.remove(x) for x in (bond2, R1, R2)]
+		[x.remove() for x in (bond2, R1, R2)]
 
 	def chain(self, left, right, n):
-		#raise Exception(0, "Chains are not Implemented")
+		'''Returns an n length chain of the molecule.'''
 		frags = [copy.deepcopy(self)]
 		lidx, ridx = self.bonds.index(left), self.bonds.index(right)
+		#n 1 alread in frags
 		for i in xrange(n-1):
 			a = copy.deepcopy(self)
 			if i == 0:
 				frags[i].merge(frags[i].bonds[ridx], a.bonds[lidx], a)
 			else:
+				#accounts for deleted bond
 				frags[i].merge(frags[i].bonds[ridx-1], a.bonds[lidx], a)
 			frags.append(a)
 		return Molecule(frags)
 
 	def stack(self, x, y, z):
+		'''Returns a molecule with x,y,z stacking.'''
 		frags = [self]
 		bb = self.bounding_box()
 		size = tuple(maxv-minv for minv, maxv in zip(bb[0], bb[1]))
@@ -302,6 +341,8 @@ class Molecule(object):
 ##############################################################################
 
 def read_data(filename):
+	'''Reads basic data files.'''
+	#try to load file with lowercase name then upper
 	try:
 		f = open(os.path.join("data",filename), "r")
 	except:
@@ -357,7 +398,7 @@ class Output(object):
 					break
 				self.write_file(molecule, f, filename)
 				if self.scale:
-					molecule.draw(filename, self.scale)
+					molecule.draw(os.path.join(args.folder, filename), self.scale)
 			except Exception as message:
 					self.errors.append(message)
 			print name, "---- Done"
@@ -372,6 +413,7 @@ class Output(object):
 					print repr(x)
 
 	def get_filename(self, name):
+		'''Returns the filename.'''
 		if self.longname:
 				nameparts = [x for x in [name, self.basis_, self.x, self.y, self.z, self.n, self.dft] if x]
 		else:
@@ -379,6 +421,7 @@ class Output(object):
 		return "_".join(nameparts)
 
 	def get_names(self):
+		'''Returns a list of all the names to use from listfiles/input.'''
 		if self.args.listfiles:
 			that = [self.read_listfile(x) for x in self.args.listfiles] 
 			this = [y for y in that if y]
@@ -403,6 +446,7 @@ class Output(object):
 		f.write(molecule.gjf)
 
 	def read_listfile(self, filename):
+		'''Returns a list of all the names in a listfile.'''
 		try:
 			names = []
 			f = open(filename, "r")
@@ -413,6 +457,7 @@ class Output(object):
 			self.errors.append((filename, "File Does Not Exist"))
 
 	def parse(self, name):
+		'''Parses a molecule name and returns the edge part names.'''
 		parts = name.split("_")
 		core = None
 
@@ -442,6 +487,7 @@ class Output(object):
 		return core, left, middle, right
 
 	def build(self, corename, leftname, middlename, rightname):
+		'''Returns a closed molecule based on the input of each of the edge names.'''
 		core = (Molecule(read_data(corename)), 0, corename, corename)
 		struct = [x if x else "A" for x in [rightname, leftname] + [middlename] * 2]
 		midx = 2
