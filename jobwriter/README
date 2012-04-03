@@ -1,6 +1,6 @@
 usage: jobwriter.py [-h] [-i [list_file [list_file ...]]] [-o outfolder]
                     [-f [folder [folder ...]]] [-n NODES] [-e EMAIL] [-t TIME]
-                    [-E] [-V] [-B] [-T] [-G] [-C] [-A]
+                    [-E] [-V] [-B] [-T] [-G] [-C] [-H] [-A]
                     [name [name ...]]
 
 This program writes Gaussian job files from molecule names.
@@ -29,8 +29,8 @@ optional arguments:
   -T                    Toggles writing Trestles job files.
   -G                    Toggles writing Gordon job files.
   -C                    Toggles writing Carver job files.
+  -H                    Toggles writing Hopper job files.
   -A                    Toggles writing all job files.
-
 
 
 Writing the template job files:

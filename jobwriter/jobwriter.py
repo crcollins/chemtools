@@ -5,7 +5,7 @@ import argparse
 import sys
 
 messages = []
-for name in ("bjob.txt", "tjob.txt", "gjob.txt", "cjob.txt"):
+for name in ("bjob.txt", "tjob.txt", "gjob.txt", "cjob.txt", "hjob.txt"):
     messages.append(''.join(open("data/"+name, "r").readlines())) 
 
 parser = argparse.ArgumentParser(description="This program writes Gaussian job files from molecule names.")
@@ -25,6 +25,7 @@ parser.add_argument('-B', action="store_true", dest="blacklight", default=False,
 parser.add_argument('-T', action="store_true", dest="trestles", default=False, help='Toggles writing Trestles job files.')
 parser.add_argument('-G', action="store_true", dest="gordon", default=False, help='Toggles writing Gordon job files.')
 parser.add_argument('-C', action="store_true", dest="carver", default=False, help='Toggles writing Carver job files.')
+parser.add_argument('-H', action="store_true", dest="hopper", default=False, help='Toggles writing Hopper job files.')
 parser.add_argument('-A', action="store_true", dest="all", default=False, help='Toggles writing all job files.')
 
 
@@ -39,6 +40,7 @@ class Output(object):
         self.tjob = args.trestles | args.all
         self.gjob = args.gordon | args.all
         self.cjob = args.carver | args.all
+        self.hjob = args.hopper | args.all
         self.outfolder = args.outfolder
         self.nodes = args.nodes
 
@@ -75,7 +77,7 @@ class Output(object):
     def write_file(self, name):
         j = ["b","t","g","c"]
         time = "%d:00:00" %(self.time)
-        for i, x in enumerate([self.bjob, self.tjob, self.gjob, self.cjob]):
+        for i, x in enumerate([self.bjob, self.tjob, self.gjob, self.cjob, self.hjob]):
             if not x:
                 continue
             f = open(os.path.join(self.outfolder, name+".%sjob"%j[i]), "w")
