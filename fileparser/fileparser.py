@@ -69,7 +69,7 @@ class Output(object):
     def find_lines(self, filename):
         f = open(filename, 'r')
         flines = f.readlines()
-        occline, virtualline, excitedline, timeline = [None]*4
+        occline, virtualline, excitedline, timeline = ['']*4
         try:
             if "Entering Gaussian System" not in flines[0]:
                 return occline, virtualline, excitedline, timeline
@@ -101,7 +101,10 @@ class Output(object):
 
     def clean_lines(self, (occline, virtualline, excitedline, timeline)):
         occ = occline.strip().split()[-1]
-        virtual = virtualline.strip().split()[4]
+        try:
+            virtual = virtualline.strip().split()[4]
+        except:
+            virtual = "---"
         try:
             excited = excitedline.strip().split()[4]
             float(excited)
@@ -118,7 +121,7 @@ class Output(object):
 
     def convert_values(self, values):
         con = (27.2117, 27.2117)
-        return tuple(str(float(x)*con[i]) for i, x in enumerate(values))
+        return tuple(str(float(x)*con[i]) if x != "---" else "---" for i, x in enumerate(values))
 
     def path(self, filename):
         return os.path.relpath(filename) if self.rel else os.path.abspath(filename)
@@ -138,7 +141,7 @@ class Output(object):
                 path = self.path(filename)
                 self.errors.append("Invalid file type:  '" + path + "'")
                 continue
-            elif all(lines) or all(lines[:2]+tuple(lines[3])):    
+            elif all(lines) or all(lines[:2] + tuple(lines[3])):    
                 ovft = self.clean_lines(lines)
             elif any(lines):
                 lines = [x if x else "---" for x in lines]
