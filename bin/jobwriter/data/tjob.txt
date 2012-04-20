@@ -5,7 +5,7 @@
 #PBS -e {name}.err
 #PBS -m bea
 #PBS -M {email}
-#PBS -A TG-CHE120009
+#PBS -A TG-CHE120020
 #PBS -V
 cd $PBS_O_WORKDIR
 export GAUSS_SCRDIR=/state/partition1/${{USER}}/${{PBS_JOBID}}
