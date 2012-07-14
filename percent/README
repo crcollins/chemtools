@@ -1,0 +1,35 @@
+usage: percent.py [-h] [-o output] [-d DRAW] [-C] [-V] [-H] [-Z] [-E]
+                 [file [file ...]]
+
+This program generates homo/lumo fits and graphs.
+
+positional arguments:
+  file        The name of single file.
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -o output   The name of the file to ouput to.
+  -d DRAW     Toggles drawing out the selected points.
+  -C          Toggles adding the center to total.
+  -V          Toggles including the center in the vertical.
+  -H          Toggles including the center in the horizontal.
+  -Z          Toggles excluding the zero position value.
+  -E          Toggles showing error messages.
+
+
+
+
+Notes:
+
+This program is case sensitive.
+Be sure to check the gjf files. Some errors might go unnoticed.
+To use the image drawer you must have PIL installed. http://www.pythonware.com/products/pil/
+
+
+Examples:
+
+percent data.txt
+// This reads the data from the file data.txt and prints it to the terminal.
+
+percent data.txt -o output.txt
+// This reads the data from the file data.txt and writes the output to output.txt.
